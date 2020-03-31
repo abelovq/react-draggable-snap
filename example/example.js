@@ -128,31 +128,32 @@ class App extends React.Component {
           : false;
       }
     };
-    console.log('Math.abs(e.clientX - this.state.posX) >= calcWidth', Math.abs(e.clientX - this.state.posX) + '-------' + calcWidth);
+    // console.log('Math.abs(e.clientX - this.state.posX) >= calcWidth', Math.abs(e.clientX - this.state.posX) + '-------' + calcWidth);
 
     if (this.state.isCenteredX && this.state.posX === 0) {
-      this.setState({ posX: e.clientX }, () => console.log(this.state.posX));
+      this.setState({ posX: e.clientX });
       return;
     }
     if (this.state.isCenteredY && this.state.posY === 0) {
       this.setState({ posY: e.clientY });
+      return;
     }
 
-    if (!this.state.isCenteredX && !this.state.isCenteredY) {
-      this.setState({ x, y });
-    }
-    if (this.state.isCenteredX && !this.state.isCenteredY) {
-      this.setState({ x: this.state.x, y });
-    }
-    if (this.state.isCenteredY && !this.state.isCenteredX) {
-      this.setState({ x, y: this.state.y });
-    }
-    if (this.state.isCenteredY && this.state.isCenteredX) {
-      this.setState({ x, y });
-    }
+    // if (!this.state.isCenteredX && !this.state.isCenteredY) {
+    //   this.setState({ x, y });
+    // }
+    // if (this.state.isCenteredX && !this.state.isCenteredY) {
+    //   this.setState({ x: this.state.x, y });
+    // }
+    // if (this.state.isCenteredY && !this.state.isCenteredX) {
+    //   this.setState({ x, y: this.state.y });
+    // }
+    // if (this.state.isCenteredY && this.state.isCenteredX) {
+    //   this.setState({ x: this.state.x, y: this.state.y });
+    // }
 
     if (this.state.isCenteredX && checkDistanceByAxis(e, 'x')) {
-      console.log('checkDistanceByAxis');
+      // console.log('checkDistanceByAxis');
       this.setState({
         isCenteredX: false,
         posX: 0,
@@ -166,28 +167,41 @@ class App extends React.Component {
         posY: 0,
         axis: 'both'
       });
-      if (
-        this.state.isCenteredX &&
-        this.state.isCenteredY &&
-        checkDistanceByAxis(e, 'xy')
-      ) {
-        this.setState({
-          isCenteredY: false,
-          isCenteredX: false,
-          posY: 0,
-          posX: 0,
-          axis: 'both'
-        });
-      }
+      return;
+    }
+    if (
+      this.state.isCenteredX &&
+      this.state.isCenteredY &&
+      checkDistanceByAxis(e, 'xy')
+    ) {
+      this.setState({
+        isCenteredY: false,
+        isCenteredX: false,
+        posY: 0,
+        posX: 0,
+        axis: 'both'
+      });
+      return;
+
     } else {
+      if (this.state.isCenteredX && this.state.isCenteredY) {
+        this.setState({ axis: 'none' }
+          // , () => {
+          //   once(flag => {
+          //     console.log('flag', flag);
+          //     this.setState({ stopdrag: flag });
+          //   });
+          // }
+        );
+      }
       if (
         Math.abs(descriptionCenterX - verticalLineX) < calcWidth &&
         !this.state.isCenteredX
       ) {
-        console.log('top ESLE', top);
+        console.log('X ESLE');
         const x = verticalLineX - 61 - width / 2;
-        const y = top - 157;
-        window.console.log(x, y);
+        const y = top - 157.875;
+        // window.console.log(x, y);
         this.setState({ isCenteredX: true, axis: 'y', x, y }
           // , () => {
           //   once(flag => {
@@ -203,10 +217,11 @@ class App extends React.Component {
         Math.abs(descriptionCenterY - horizontalLineY) < calcHeight &&
         !this.state.isCenteredY
       ) {
-        const x = left - 320;
-        const y = horizontalLineY - height / 2;
+        const x = left - 60;
+        const y = (horizontalLineY - 159) - height / 2;
+        console.log('Y ESLE', x, y);
         this.setState({ isCenteredY: true, axis: 'x', x, y });
-        return true;
+        // return true;
       }
     }
 
@@ -231,11 +246,11 @@ class App extends React.Component {
     }
     if (this.state.isCenteredY && !this.state.isCenteredX) {
 
-      this.setState({ x: this.state.x, y: this.state.y });
+      this.setState({ x: position.x, y: this.state.y });
     }
     if (this.state.isCenteredY && this.state.isCenteredX) {
-
-      this.setState({ x: this.state.x, y: this.state.y });
+      console.log('CENTER');
+      this.setState({ x: 805.5, y: 192.5 });
     }
 
 
@@ -249,7 +264,7 @@ class App extends React.Component {
   handleDragStart = e => {
     console.log('handleDragStart', e);
     if (this.state.isCenteredX) {
-      this.setState({ posX: e.clientX }, () => console.log(this.state.posX));
+      this.setState({ posX: e.clientX });
     }
     if (this.state.isCenteredY) {
       this.setState({ posY: e.clientY });
