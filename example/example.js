@@ -1,4 +1,6 @@
-const {ReactDraggable: Draggable, React, ReactDOM} = window;
+const { ReactDraggable: Draggable, React, ReactDOM } = window;
+
+// import './drag.css';
 
 class App extends React.Component {
   state = {
@@ -6,58 +8,247 @@ class App extends React.Component {
     deltaPosition: {
       x: 0, y: 0
     },
-    controlledPosition: {
-      x: -400, y: 200
-    }
+    // controlledPosition: {
+    //   x: -400, y: 200
+    // },
+    isSnapped: false,
+    isCenteredX: false,
+    isCenteredY: false,
+    grid: [1, 1],
+    posX: 0,
+    posY: 0,
+    axis: 'both',
+    stopdrag: false,
+    x: undefined,
+    y: undefined
+
   };
 
   handleDrag = (e, ui) => {
-    const {x, y} = this.state.deltaPosition;
+    window.console.log('handleDrag', e.clientX, e.clientY);
+    // console.log('ui', ui);
+    const { x, y } = this.state.deltaPosition;
+    // if (e.clientX >= 350 && e.clientY >= 400) {
+    //   console.log('INNER');
+    //   this.setState({ deltaPosition: { x: 400, y: 250 } });
+    // } 
+
     this.setState({
       deltaPosition: {
         x: x + ui.deltaX,
         y: y + ui.deltaY,
       }
     });
+
+
   };
 
   onStart = () => {
-    this.setState({activeDrags: ++this.state.activeDrags});
+    this.setState({ activeDrags: ++this.state.activeDrags });
   };
 
   onStop = () => {
-    this.setState({activeDrags: --this.state.activeDrags});
+    this.setState({ activeDrags: --this.state.activeDrags });
   };
 
   // For controlled component
   adjustXPos = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const {x, y} = this.state.controlledPosition;
-    this.setState({controlledPosition: {x: x - 10, y}});
+    const { x, y } = this.state.controlledPosition;
+    this.setState({ controlledPosition: { x: x - 10, y } });
   };
 
   adjustYPos = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const {controlledPosition} = this.state;
-    const {x, y} = controlledPosition;
-    this.setState({controlledPosition: {x, y: y - 10}});
+    const { controlledPosition } = this.state;
+    const { x, y } = controlledPosition;
+    this.setState({ controlledPosition: { x, y: y - 10 } });
   };
 
   onControlledDrag = (e, position) => {
-    const {x, y} = position;
-    this.setState({controlledPosition: {x, y}});
+    const { x, y } = position;
+    // if (e.clientX >= 350 && e.clientY >= 400) {
+    //   console.log('INNER');
+    //   this.setState({ controlledPosition: { x: 400, y: 250 } });
+    // } else {
+    //   this.setState({ controlledPosition: { x, y } });
+    // }
+
+    // console.log('handleDrag');
+    // const { isCenteredX, isCenteredY } = this.state;
+
+    // this.props.onLineVisible(true);
+    // const description = this.rnd;
+
+    const verticalLine = document.querySelector('.header-lines .vert');
+    const horizontalLine = document.querySelector('.header-lines .horiz');
+
+    const {
+      x: descX,
+      y: descY,
+      width,
+      height,
+      top,
+      left
+    } = document.querySelector('.box1').getBoundingClientRect();
+
+    const { x: verticalLineX } = verticalLine.getBoundingClientRect();
+
+    const { y: horizontalLineY } = horizontalLine.getBoundingClientRect();
+
+    const descriptionCenterX = descX + width / 2;
+    const descriptionCenterY = descY + height / 2;
+
+    const calcHeight =
+      Math.abs(descriptionCenterY - horizontalLineY - 320) < 30
+        ? Math.abs(descriptionCenterY - horizontalLineY)
+        : 30;
+    const calcWidth =
+      Math.abs(descriptionCenterX - verticalLineX - 320) < 30
+        ? Math.abs(descriptionCenterX - verticalLineX)
+        : 30;
+
+    const checkDistanceByAxis = (e, axis) => {
+      if (axis === 'x') {
+        return Math.abs(e.clientX - this.state.posX) >= calcWidth
+          ? true
+          : false;
+      }
+      if (axis === 'y') {
+        return Math.abs(e.clientY - this.state.posY) >= calcHeight
+          ? true
+          : false;
+      }
+      if (axis === 'xy') {
+        return Math.abs(e.clientY - this.state.posY) >= calcWidth ||
+          Math.abs(e.clientX - this.state.posX) >= calcHeight
+          ? true
+          : false;
+      }
+    };
+    console.log('top', top);
+
+    if (!this.state.isCenteredX && !this.state.isCenteredY) {
+      this.setState({ x, y });
+    }
+    if (this.state.isCenteredX && !this.state.isCenteredY) {
+      this.setState({ x: this.state.x, y });
+    }
+    if (this.state.isCenteredY && !this.state.isCenteredX) {
+      this.setState({ x, y: this.state.y });
+    }
+    if (this.state.isCenteredY && this.state.isCenteredX) {
+      this.setState({ x, y });
+    }
+
+    if (this.state.isCenteredX && checkDistanceByAxis(e, 'x')) {
+      this.setState({
+        isCenteredX: false,
+        posX: 0,
+        axis: 'both'
+      });
+    }
+    if (this.state.isCenteredY && checkDistanceByAxis(e, 'y')) {
+      this.setState({
+        isCenteredY: false,
+        posY: 0,
+        axis: 'both'
+      });
+      if (
+        this.state.isCenteredX &&
+        this.state.isCenteredY &&
+        checkDistanceByAxis(e, 'xy')
+      ) {
+        this.setState({
+          isCenteredY: false,
+          isCenteredX: false,
+          posY: 0,
+          posX: 0,
+          axis: 'both'
+        });
+      }
+    } else {
+      if (
+        Math.abs(descriptionCenterX - verticalLineX) < calcWidth &&
+        !this.state.isCenteredX
+      ) {
+        console.log('top ESLE', top);
+        const x = verticalLineX - 61 - width / 2;
+        const y = top - 157;
+        window.console.log(x, y);
+        this.setState({ isCenteredX: true, axis: 'y', x, y }
+          // , () => {
+          //   once(flag => {
+          //     console.log('flag', flag);
+          //     this.setState({ stopdrag: flag });
+          //   });
+          // }
+        );
+
+        // return true;
+      }
+      if (
+        Math.abs(descriptionCenterY - horizontalLineY) < calcHeight &&
+        !this.state.isCenteredY
+      ) {
+        const x = left - 320;
+        const y = horizontalLineY - height / 2;
+        this.setState({ isCenteredY: true, axis: 'x', x, y });
+        return true;
+      }
+    }
+
+
+
+
+
+
   };
 
   onControlledDragStop = (e, position) => {
-    this.onControlledDrag(e, position);
+    console.log('onControlledDragStop', position);
+
+
+    if (!this.state.isCenteredX && !this.state.isCenteredY) {
+      this.setState({ x: position.x, y: position.y });
+
+    }
+    if (this.state.isCenteredX && !this.state.isCenteredY) {
+      this.setState({ x: this.state.x, y: position.y });
+
+    }
+    if (this.state.isCenteredY && !this.state.isCenteredX) {
+
+      this.setState({ x: this.state.x, y: this.state.y });
+    }
+    if (this.state.isCenteredY && this.state.isCenteredX) {
+
+      this.setState({ x: this.state.x, y: this.state.y });
+    }
+
+
+
+
+
+    // this.onControlledDrag(e, position);
     this.onStop();
   };
 
+  handleDragStart = e => {
+    console.log('handleDragStart', e);
+    if (this.state.isCenteredX) {
+      this.setState({ posX: e.clientX }, () => console.log(this.state.posX));
+    }
+    if (this.state.isCenteredY) {
+      this.setState({ posY: e.clientY });
+    }
+  };
+
   render() {
-    const dragHandlers = {onStart: this.onStart, onStop: this.onStop};
-    const {deltaPosition, controlledPosition} = this.state;
+    const dragHandlers = { onStart: this.onStart, onStop: this.onStop };
+    const { deltaPosition, controlledPosition } = this.state;
     return (
       <div>
         <h1>React Draggable</h1>
@@ -65,10 +256,34 @@ class App extends React.Component {
         <p>
           <a href="https://github.com/mzabriskie/react-draggable/blob/master/example/index.html">Demo Source</a>
         </p>
-        <Draggable {...dragHandlers}>
+        {/* <Draggable {...dragHandlers} onDrag={this.handleDrag} position={this.state.deltaPosition}>
           <div className="box">I can be dragged anywhere</div>
+        </Draggable> */}
+        <div className="header-lines">
+          {/* <span className="vert" hidden={isBlockDragged} />
+            <span className="horiz" hidden={isBlockDragged} /> */}
+          <span className="vert" />
+          <span className="horiz" />
+        </div>
+        {/* <Draggable onDrag={this.handleDrag} {...dragHandlers} >
+          <div className="box">
+            <div>I track my deltas</div>
+            <div>x: {deltaPosition.x.toFixed(0)}, y: {deltaPosition.y.toFixed(0)}</div>
+          </div>
+        </Draggable> */}
+        <Draggable position={{ x: this.state.x || 0, y: this.state.y || 0 }} {...dragHandlers} onStart={this.handleDragStart} onDrag={this.onControlledDrag} axis={this.state.axis} bounds=".header-lines" onStop={this.onControlledDragStop} isSnapped={this.state.isSnapped}>
+          <div className="box1">
+            My position can be changed programmatically. <br />
+            I have a drag handler to sync state.
+            <p>
+              <a href="#" onClick={this.adjustXPos}>Adjust x ({this.state.x})</a>
+            </p>
+            <p>
+              <a href="#" onClick={this.adjustYPos}>Adjust y ({this.state.y})</a>
+            </p>
+          </div>
         </Draggable>
-        <Draggable axis="x" {...dragHandlers}>
+        {/* <Draggable axis="x" {...dragHandlers}>
           <div className="box cursor-x">I can only be dragged horizonally (x axis)</div>
         </Draggable>
         <Draggable axis="y" {...dragHandlers}>
@@ -139,20 +354,21 @@ class App extends React.Component {
           <div className="box">
             {'I have a default position based on percents {x: \'-10%\', y: \'-10%\'}, so I\'m slightly offset.'}
           </div>
-        </Draggable>
-        <Draggable position={controlledPosition} {...dragHandlers} onDrag={this.onControlledDrag}>
-          <div className="box">
+      </Draggable>*/}
+
+        {/* <Draggable position={{ x: this.state.x || 0, y: this.state.y || 0 }} {...dragHandlers} onDrag={this.onControlledDrag} axis={this.state.axis}>
+          <div className="box1">
             My position can be changed programmatically. <br />
             I have a drag handler to sync state.
             <p>
-              <a href="#" onClick={this.adjustXPos}>Adjust x ({controlledPosition.x})</a>
+              <a href="#" onClick={this.adjustXPos}>Adjust x ({this.state.x})</a>
             </p>
             <p>
-              <a href="#" onClick={this.adjustYPos}>Adjust y ({controlledPosition.y})</a>
+              <a href="#" onClick={this.adjustYPos}>Adjust y ({this.state.y})</a>
             </p>
           </div>
-        </Draggable>
-        <Draggable position={controlledPosition} {...dragHandlers} onStop={this.onControlledDragStop}>
+        </Draggable> */}
+        {/* <Draggable position={controlledPosition} {...dragHandlers} onStop={this.onControlledDragStop}>
           <div className="box">
             My position can be changed programmatically. <br />
             I have a dragStop handler to sync state.
@@ -163,11 +379,12 @@ class App extends React.Component {
               <a href="#" onClick={this.adjustYPos}>Adjust y ({controlledPosition.y})</a>
             </p>
           </div>
-        </Draggable>
+        </Draggable> */}
 
-      </div>
+
+      </div >
     );
   }
 }
 
-ReactDOM.render(<App/>, document.getElementById('container'));
+ReactDOM.render(<App />, document.getElementById('container'));
