@@ -128,7 +128,15 @@ class App extends React.Component {
           : false;
       }
     };
-    console.log('top', top);
+    console.log('Math.abs(e.clientX - this.state.posX) >= calcWidth', Math.abs(e.clientX - this.state.posX) + '-------' + calcWidth);
+
+    if (this.state.isCenteredX && this.state.posX === 0) {
+      this.setState({ posX: e.clientX }, () => console.log(this.state.posX));
+      return;
+    }
+    if (this.state.isCenteredY && this.state.posY === 0) {
+      this.setState({ posY: e.clientY });
+    }
 
     if (!this.state.isCenteredX && !this.state.isCenteredY) {
       this.setState({ x, y });
@@ -144,11 +152,13 @@ class App extends React.Component {
     }
 
     if (this.state.isCenteredX && checkDistanceByAxis(e, 'x')) {
+      console.log('checkDistanceByAxis');
       this.setState({
         isCenteredX: false,
         posX: 0,
         axis: 'both'
       });
+      return;
     }
     if (this.state.isCenteredY && checkDistanceByAxis(e, 'y')) {
       this.setState({
